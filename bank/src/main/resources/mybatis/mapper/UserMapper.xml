@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- @author SONG  -->
+<mapper namespace="com.springboot.bank.mapper.UserMapper">
+  <resultMap id="result-user" type="User">
+    <id property="id" column="id"/>
+    <result property="username" column="username"/>
+    <result property="password" column="password"/>
+    <result property="email" column="email"/>
+    <result property="enabled" column="enabled"/>
+    <result property="lastPasswordResetDate" column="last_password_reset_date"/>
+    <result property="loginDate" column="login_time"/>
+
+    <!-- 用户关联的角色 -->
+    <collection property="authorities" ofType="com.springboot.bank.security.domain.Authority">
+      <id property="id" column="auth_id"/>
+      <result property="name" column="name"/>
+    </collection>
+  </resultMap>
+
+  <select id="findByUsername" resultMap="result-user">
+    select u.id,u.username,u.password,u.email,u.enabled,
+    u.last_password_reset_date,u.login_time,a.id auth_id,a.name
+    from user u,authority a,user_authority ua
+    where u.enabled=1 and u.username=#{username}
+    and u.id=ua.user_id and ua.authority_id=a.id
+  </select>
+</mapper>

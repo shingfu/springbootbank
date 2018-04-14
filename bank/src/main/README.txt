@@ -93,6 +93,49 @@ USER_ID	ROLE_ID
   mybatis.mapper-locations=classpath:mybatis/mapper/*.xml
 
 05.让Spring控制的安全配置类:WebSecurityConfig
+ 配置Spring Security - WebSecurityConfig
+    1.当要自定义Spring Security的时候需要继承自WebSecurityConfigurerAdapter来完成,相关配置重写对应方法即可。
+    2.在这里注册CustomUserService的Bean，然后通过重写configure方法添加自定义的认证方式。
+    3.在configure(HttpSecurity http)方法中，设置了登录页面，而且登录页面任何人都可以访问，然后设置了登录失败地址，也设置了注销请求，注销请求也是任何人都可以访问的。
+    4.permitAll表示该请求任何人都可以访问，.anyRequest().authenticated(),表示其他的请求都必须要有权限认证。
+    5.这里可以通过匹配器来匹配路径，比如antMatchers方法，假设要管理员才可以访问admin文件夹下的内容，可以这样来写：.antMatchers("/admin/**").hasRole("ROLE_ADMIN")，也可以设置admin文件夹下的文件可以有多个角色来访问，写法如下：.antMatchers("/admin/**").hasAnyRole("ROLE_ADMIN","ROLE_USER")
+    6.可以通过hasIpAddress来指定某一个ip可以访问该资源,假设只允许访问ip为210.210.210.210的请求获取admin下的资源，写法如下.antMatchers("/admin/**").hasIpAddress("210.210.210.210")
+    7.更多的权限控制方式
+      方法名                      用途
+      access(String)              String EL表达式结果为true时可访问
+      anonymous()                 匿名可访问
+      denyAll()                   用户不可以访问
+      fullyAuthenticated()        用户完全认识可访问(非remember me下自动登录)
+      hasAnyAuthority(String...)  参数中任意权限的用户可访问
+      hasAnyRole(String...)       参数中任意角色的用户可访问
+      hasAuthority(String)        某一权限的用户可访问
+      hasRole(String)             某一角色的用户可访问
+      permitAll()                 所有用户可访问
+      rememberMe()                运行通过 remember me 登录的用户访问
+      authenticated()             用户登录后可访问
+      hasIpAddress(String)        用户来自参数中的ip时可访问
+
+    8.这里还可以做更多的配置，参考如下代码：
+    http.authorizeRequests()
+      .anyRequest().authenticated()
+      .and().formLogin().loginPage("/login")
+      //设置默认登录成功跳转页面
+      .defaultSuccessUrl("/index").failureUrl("/login?error").permitAll()
+      .and()
+      //开启cookie保存用户数据
+      .rememberMe()
+      //设置cookie有效期
+      .tokenValiditySeconds(60 * 60 * 24 * 7)
+      //设置cookie的私钥
+      .key("")
+      .and()
+      .logout()
+      //默认注销行为为logout，可以通过下面的方式来修改
+      .logoutUrl("/custom-logout")
+      //设置注销成功后跳转页面，默认是跳转到登录页面
+      .logoutSuccessUrl("")
+      .permitAll();
+
 
 06.在 XxxController 加一个修饰符 @PreAuthorize("hasRole('ADMIN')") 表示这个资源只能被拥有 ADMIN 角色的用户访问
   /**
