@@ -1,10 +1,16 @@
 package com.springboot.bank.domain;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.springboot.bank.security.domain.Authority;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
+/**
+ * 用户实体类
+ *
+ * @author SONG
+ */
 public class User implements Serializable {
   private static final long serialVersionUID = 3446748800973835540L;
   private Integer id;
@@ -12,12 +18,9 @@ public class User implements Serializable {
   private String password;
   private String email;
   private Integer enabled;
-
-  @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
   private Date lastPasswordResetDate;
-
-  @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
   private Date loginDate;
+  private List<Authority> authorities;
 
   public User() {
   }
@@ -76,5 +79,13 @@ public class User implements Serializable {
 
   public void setLoginDate(Date loginDate) {
     this.loginDate = loginDate;
+  }
+
+  public List<Authority> getAuthorities() {
+    return authorities;
+  }
+
+  public void setAuthorities(List<Authority> authorities) {
+    this.authorities = authorities;
   }
 }
