@@ -69,6 +69,7 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-mobile</artifactId>
+      <version>1.5.12.RELEASE</version>
     </dependency>
 
     <!-- https://mvnrepository.com/artifact/com.google.code.findbugs/findbugs -->
