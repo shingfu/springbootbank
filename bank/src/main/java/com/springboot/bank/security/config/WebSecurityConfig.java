@@ -1,5 +1,7 @@
 package com.springboot.bank.security.config;
 
+import com.springboot.bank.security.JwtAuthenticationEntryPoint;
+import com.springboot.bank.security.JwtAuthenticationTokenFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,16 +27,35 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+
+  @Autowired
+  private JwtAuthenticationEntryPoint unauthorizedHandler;
+
   @Autowired
   private UserDetailsService userDetailsService;
 
   @Autowired
   public void configureAuthentication(AuthenticationManagerBuilder authenticationManagerBuilder) throws Exception {
-    authenticationManagerBuilder.
+    authenticationManagerBuilder
         // 设置 UserDetailsService
-            userDetailsService(this.userDetailsService).
+        .userDetailsService(this.userDetailsService)
         // 使用 BCrypt 进行密码的 hash
-            passwordEncoder(passwordEncoder());
+        .passwordEncoder(passwordEncoder());
+  }
+
+  /**
+   * 装载 BCrypt 密码编码器
+   *
+   * @return
+   */
+  @Bean
+  public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
+  }
+
+  @Bean
+  public JwtAuthenticationTokenFilter authenticationTokenFilterBean() throws Exception {
+    return new JwtAuthenticationTokenFilter();
   }
 
   /**
@@ -48,6 +69,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     httpSecurity
         // we don't need CSRF because our token is invulnerable
         .csrf().disable()
+        .cors().and() // 跨域
+
+        .exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
+
         // don't create session
         .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
 
@@ -65,30 +90,23 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             "/**/*.js"
         ).permitAll()
 
-        // Un-secure 注册 登录 验证码
+        // Un-secure 登录 验证码
         .antMatchers(
-            "/auth/**",
-            "/api/users",
+            "/api/auth/**",
             "/api/imagecode",
             "/api/global_json"
         ).permitAll()
         // secure other api
         .anyRequest().authenticated();
 
+    // Custom JWT based security filter
+    // 将token验证添加在密码验证前面
+    httpSecurity
+        .addFilterBefore(authenticationTokenFilterBean(), UsernamePasswordAuthenticationFilter.class);
+
     // disable page caching
     httpSecurity
         .headers()
-        .frameOptions().sameOrigin()  // required to set for H2 else H2 Console will be blank.
         .cacheControl();
-  }
-
-  /**
-   * 装载 BCrypt 密码编码器
-   *
-   * @return
-   */
-  @Bean
-  public PasswordEncoder passwordEncoder() {
-    return new BCryptPasswordEncoder();
   }
 }
