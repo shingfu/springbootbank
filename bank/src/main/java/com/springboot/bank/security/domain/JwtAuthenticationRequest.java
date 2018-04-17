@@ -3,6 +3,8 @@ package com.springboot.bank.security.domain;
 import java.io.Serializable;
 
 /**
+ * JWT 授权请求类
+ *
  * @author SONG
  */
 public class JwtAuthenticationRequest implements Serializable {

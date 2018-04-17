@@ -1,28 +1,31 @@
 package com.springboot.bank.security.config;
 
 import com.springboot.bank.security.JwtAuthenticationEntryPoint;
-import com.springboot.bank.security.JwtAuthenticationTokenFilter;
+import com.springboot.bank.security.JwtAuthorizationTokenFilter;
+import com.springboot.bank.security.JwtTokenUtil;
+import com.springboot.bank.security.service.JwtUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
- * 安全配置类
+ * Web 安全配置类
  *
  * @author SONG
  */
-@SuppressWarnings("SpringJavaAutowiringInspection")
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
@@ -32,38 +35,35 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
   private JwtAuthenticationEntryPoint unauthorizedHandler;
 
   @Autowired
-  private UserDetailsService userDetailsService;
+  private JwtTokenUtil jwtTokenUtil;
 
   @Autowired
-  public void configureAuthentication(AuthenticationManagerBuilder authenticationManagerBuilder) throws Exception {
-    authenticationManagerBuilder
-        // 设置 UserDetailsService
-        .userDetailsService(this.userDetailsService)
-        // 使用 BCrypt 进行密码的 hash
-        .passwordEncoder(passwordEncoder());
+  private JwtUserDetailsService jwtUserDetailsService;
+
+  @Value("${jwt.header}")
+  private String tokenHeader;
+
+  @Value("${jwt.route.authentication.path}")
+  private String authenticationPath;
+
+  @Autowired
+  public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
+    auth
+        .userDetailsService(jwtUserDetailsService)
+        .passwordEncoder(passwordEncoderBean());
   }
 
-  /**
-   * 装载 BCrypt 密码编码器
-   *
-   * @return
-   */
   @Bean
-  public PasswordEncoder passwordEncoder() {
+  public PasswordEncoder passwordEncoderBean() {
     return new BCryptPasswordEncoder();
   }
 
   @Bean
-  public JwtAuthenticationTokenFilter authenticationTokenFilterBean() throws Exception {
-    return new JwtAuthenticationTokenFilter();
+  @Override
+  public AuthenticationManager authenticationManagerBean() throws Exception {
+    return super.authenticationManagerBean();
   }
 
-  /**
-   * token请求授权
-   *
-   * @param httpSecurity
-   * @throws Exception
-   */
   @Override
   protected void configure(HttpSecurity httpSecurity) throws Exception {
     httpSecurity
@@ -77,9 +77,35 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
 
         .authorizeRequests()
-        //.antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+        .antMatchers("/api/auth/**").permitAll()
+        .anyRequest().authenticated();
+
+    // Custom JWT based security filter
+    JwtAuthorizationTokenFilter authenticationTokenFilter = new JwtAuthorizationTokenFilter(userDetailsService(), jwtTokenUtil, tokenHeader);
+    httpSecurity
+        .addFilterBefore(authenticationTokenFilter, UsernamePasswordAuthenticationFilter.class);
+
+    // disable page caching
+    httpSecurity
+        .headers()
+        .frameOptions().sameOrigin()  // required to set for H2 else H2 Console will be blank.
+        .cacheControl();
+  }
+
+  @Override
+  public void configure(WebSecurity web) throws Exception {
+    // AuthenticationTokenFilter will ignore the below paths
+    web
+        .ignoring()
+        .antMatchers(
+            HttpMethod.POST,
+            authenticationPath
+        )
 
         // allow anonymous resource requests
+        .and()
+        .ignoring()
         .antMatchers(
             HttpMethod.GET,
             "/",
@@ -88,25 +114,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             "/**/*.html",
             "/**/*.css",
             "/**/*.js"
-        ).permitAll()
-
-        // Un-secure 登录 验证码
-        .antMatchers(
-            "/api/auth/**",
-            "/api/imagecode",
-            "/api/global_json"
-        ).permitAll()
-        // secure other api
-        .anyRequest().authenticated();
-
-    // Custom JWT based security filter
-    // 将token验证添加在密码验证前面
-    httpSecurity
-        .addFilterBefore(authenticationTokenFilterBean(), UsernamePasswordAuthenticationFilter.class);
-
-    // disable page caching
-    httpSecurity
-        .headers()
-        .cacheControl();
+        );
   }
 }

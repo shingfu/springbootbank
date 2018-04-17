@@ -7,11 +7,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
 
 /**
  * 用户详细信息的服务类
+ *
+ * @author SONG
  */
-public class JwtUserDetailsServiceImpl implements UserDetailsService {
+@Service
+public class JwtUserDetailsService implements UserDetailsService {
   @Autowired
   private UserMapper userMapper;
 

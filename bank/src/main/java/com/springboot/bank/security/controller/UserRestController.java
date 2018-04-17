@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RestController;
  * @author SONG
  */
 @RestController
-@CrossOrigin(origins = "http://127.0.0.1:8080", maxAge = 3600)
 @RequestMapping("/api")
 public class UserRestController {
 
@@ -33,7 +32,7 @@ public class UserRestController {
   @Qualifier("jwtUserDetailsService")
   private UserDetailsService userDetailsService;
 
-  @RequestMapping(value = "user", method = RequestMethod.GET)
+  @RequestMapping(value = "/user", method = RequestMethod.GET)
   public JwtUser getAuthenticatedUser(HttpServletRequest request) {
     String token = request.getHeader(tokenHeader).substring(7);
     String username = jwtTokenUtil.getUsernameFromToken(token);
