@@ -20,3 +20,14 @@ mybatis:
 logging:
   level:
     org.springframework.security: info
+
+# JWT
+jwt:
+  header: Authorization
+  secret: mySecret
+# token
+  expiration: 604800
+  route:
+    authentication:
+      path: /auth
+      refresh: /refresh
