@@ -157,11 +157,6 @@ USER_ID	ROLE_ID
       <version>0.9.0</version>
   </dependency>
 
-  <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-mobile</artifactId>
-  </dependency>
-
   <!-- https://mvnrepository.com/artifact/com.google.code.findbugs/findbugs -->
   <dependency>
       <groupId>com.google.code.findbugs</groupId>
