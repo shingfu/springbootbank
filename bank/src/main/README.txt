@@ -194,3 +194,25 @@ USER_ID	ROLE_ID
   修改登录: index.html + hospital.js
   修改 CorsConfig: 注释 跨域session共享; 新增 addAllowedOrigin()
   修改注销: main.html
+
+
+跨域是指 不同域名之间相互访问。跨域，指的是浏览器不能执行其他网站的脚本。它是由浏览器的同源策略造成的，是浏览器对JavaScript施加的安全限制
+
+也就是如果在A网站中，我们希望使用Ajax来获得B网站中的特定内容
+如果A网站与B网站不在同一个域中，那么就出现了跨域访问问题。
+
+什么是同一个域？
+同一协议，同一ip，同一端口，三同中有一不同就产生了跨域。
+
+
+
+配置前端服务器 Live-server:
+  1 下载 nodejs: nodejs.org
+  2 安装 nodejs
+  3 安装前端服务器:npm --registry=https://registry.npm.taobao.org i -g live-server
+  4 启动前端服务器:live-server
+
+
+1.新增用户(系统用户) - ROLE_ADMIN
+2.海量的数据 - redis
+
