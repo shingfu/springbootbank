@@ -211,3 +211,8 @@ USER_ID	ROLE_ID
   2 安装 nodejs
   3 安装前端服务器:npm --registry=https://registry.npm.taobao.org i -g live-server
   4 启动前端服务器:live-server
+
+
+1.新增用户(系统用户) - ROLE_ADMIN
+2.海量的数据 - redis
+

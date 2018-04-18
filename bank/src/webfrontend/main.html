@@ -125,19 +125,16 @@
       <dd>
         <ul>
           <li>
-            <a data-href="../index.jsp" data-title="系统设置" href="javascript:void(0);">系统设置</a>
+            <a data-href="system/setting.html" data-title="系统设置" href="javascript:void(0);">系统设置</a>
           </li>
           <li>
-            <a data-href="../toyedit.jsp" data-title="栏目管理" href="javascript:void(0);">栏目管理</a>
+            <a data-href="system/dictionary.html" data-title="数据字典" href="javascript:void(0);">数据字典</a>
           </li>
           <li>
-            <a data-href="../ToyServlet" data-title="数据字典" href="javascript:void(0);">数据字典</a>
+            <a data-href="system/log.html" data-title="系统日志" href="javascript:void(0);">系统日志</a>
           </li>
           <li>
-            <a data-href="../jqueryvalidate.html" data-title="系统日志" href="javascript:void(0);">系统日志</a>
-          </li>
-          <li>
-            <a data-href="../jquery.jsp" data-title="屏蔽词" href="javascript:void(0);">屏蔽词</a>
+            <a data-href="system/userlist.html" data-title="系统用户管理" href="javascript:void(0);">系统用户管理</a>
           </li>
         </ul>
       </dd>
@@ -193,6 +190,9 @@
 <script src="js/bank.js"></script>
 <script>
   $(window).on('load', () => {
+    // 隐藏菜单
+    $("#menu-system").hide()
+
     // 加载当前用户信息
     $.ajax({
       url: BANK_URL + "user",
@@ -204,6 +204,9 @@
         if (user) {
           $("#username").html(user.username)
           $("#loginDate").html(user.loginDate)
+
+          // 根据角色加载菜单
+          loadMenu(user.authorities)
         } else {
           location.href = "index.html"
         }
@@ -216,6 +219,22 @@
       }
     })
   })
+
+  /**
+   * 根据角色加载菜单
+   */
+  function loadMenu(authorities) {
+    authorities.forEach((authorityItem) => {
+      if (authorityItem.authority == 'ROLE_ADMIN') {
+        // 显示系统管理员的菜单
+        $("#menu-system").show()
+      } else if (authorityItem.authority == 'ROLE_MANAGER') {
+        // 显示经理的菜单
+      } else if (authorityItem.authority == 'ROLE_CLERK') {
+        // 显示办事员的菜单
+      }
+    })
+  }
 
   /**
    * 修改密码
