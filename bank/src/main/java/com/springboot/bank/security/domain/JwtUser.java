@@ -23,7 +23,7 @@ public class JwtUser implements UserDetails {
   private final boolean enabled;
   private final Date lastPasswordResetDate;
 
-  @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+  @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
   private final Date loginDate;
 
   public JwtUser(

@@ -5,7 +5,7 @@
   <meta name="viewport"
         content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>H-ui</title>
+  <title>华融湘江银行</title>
   <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
   <link rel="stylesheet" href="static/h-ui/css/H-ui.min.css">
   <link rel="stylesheet" href="static/h-ui.admin/css/H-ui.admin.css">
@@ -39,17 +39,19 @@
               <i class="Hui-iconfont">&#xe6d5;</i>
             </a>
             <ul class="dropDown-menu menu radius box-shadow">
-              <li><a href="javascript:;">修改密码</a></li>
-              <li><a href="javascript:;" onclick="logout()">退出</a></li>
+              <li><a href="javascript:changePassword('修改密码','changePassword.html',400,300);">修改密码</a></li>
+              <li><a href="javascript:logout();">退出</a></li>
             </ul>
           </li>
 
+          <!--
           <li id="Hui-msg">
             <a href="#" title="消息">
               <span class="badge badge-danger">7</span>
               <i class="Hui-iconfont" style="font-size:18px">&#xe68a;</i>
             </a>
           </li>
+          -->
 
           <li id="Hui-skin" class="dropDown right dropDown_hover">
             <a href="javascript:;" class="dropDown_A" title="换肤">
@@ -191,19 +193,40 @@
 <script src="js/bank.js"></script>
 <script>
   $(window).on('load', () => {
+    // 加载当前用户信息
     $.ajax({
-      url: BANK_URL+"user",
+      url: BANK_URL + "user",
       type: "GET",
       contentType: "application/json; charset=utf-8",
       dataType: "json",
       headers: createAuthorizationTokenHeader(),
       success: function (user, textStatus, jqXHR) {
-        $("#username").html(user.username)
-        $("#loginDate").html(user.loginDate)
+        if (user) {
+          $("#username").html(user.username)
+          $("#loginDate").html(user.loginDate)
+        } else {
+          location.href = "index.html"
+        }
+      },
+      error: function (jqXHR, textStatus, errorThrows) {
+        console.log("Spring exception.")
+        layer.confirm("非授权用户,请先登录!", () => {
+          location.href = "index.html"
+        })
       }
     })
   })
 
+  /**
+   * 修改密码
+   */
+  function changePassword(title, url, w, h) {
+    layer_show(title, url, w, h)
+  }
+
+  /**
+   * 注销 | 退出
+   */
   function logout() {
     layer.confirm("是否确认退出?", () => {
       removeJwtToken()
