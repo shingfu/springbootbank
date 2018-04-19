@@ -216,3 +216,51 @@ USER_ID	ROLE_ID
 1.新增用户(系统用户) - ROLE_ADMIN
 2.海量的数据 - redis
 
+问题:
+1.图表查询 N 次
+2.高并发.txt
+
+
+将Redis作为二级缓存
+1.pom.xml中增加redis的依赖
+  <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-redis</artifactId>
+  </dependency>
+
+2.application.properties中增加redis配置
+  Spring Boot会在侦测到存在Redis的依赖并且Redis的配置是可用的情况下，使用RedisCacheManager初始化CacheManager
+
+  spring.redis.pool.max-idle=8
+  spring.redis.pool.min-idle=0
+  spring.redis.pool.max-active=8
+  spring.redis.pool.max-wait=-1
+
+  logging.level.com.hospital.registration.mapper=debug
+
+  采用yaml作为配置文件的格式。xml显得冗长，properties没有层级结构，yaml刚好弥补了这两者的缺点。
+  这也是Spring Boot默认就支持yaml格式的原因
+
+3.util:ApplicationContextHolder + RedisCache
+4.映射器接口: @CacheNamespace(implementation = com.hospital.registration.util.RedisCache.class)
+  映射文件 : <cache type="com.hospital.registration.util.RedisCache"/>
+5.在Spring Boot主类 Application 中增加@EnableCaching注解开启缓存功能
+6.JUnit
+
+
+
+Mybatis的二级缓存原理:Mybatis的二级缓存可以自动地对数据库的查询做缓存，并且可以在更新数据时同时自动地更新缓存。
+
+实现Mybatis的二级缓存很简单，只需要新建一个类实现org.apache.ibatis.cache.Cache接口即可。
+该接口共有以下五个方法：
+
+String getId()：mybatis缓存操作对象的标识符。一个mapper对应一个mybatis的缓存操作对象。
+void putObject(Object key, Object value)：将查询结果塞入缓存。
+Object getObject(Object key)：从缓存中获取被缓存的查询结果。
+Object removeObject(Object key)：从缓存中删除对应的key、value。只有在回滚时触发。一般我们也可以不用实现，具体使用方式请参考：org.apache.ibatis.cache.decorators.TransactionalCache。
+void clear()：发生更新时，清除缓存。
+int getSize()：可选实现。返回缓存的数量。
+ReadWriteLock getReadWriteLock()：可选实现。用于实现原子性的缓存操作
+
+tips: 修改密码后需等缓存失效超时后,再重新登录
+
