@@ -32,5 +32,16 @@ public interface UserMapper {
   @Update("update user set email=#{email},enabled=#{enabled} where id=#{id}")
   int modify(User user);
 
-
+  /**
+   * 关联用户-角色
+   *
+   * @param userId
+   * @param authorityId
+   * @return
+   */
+  @Insert("insert into user_authority(user_id,authority_id) values(#{userId},#{authorityId})")
+  int addUserAuthority(
+      @Param("userId") Integer userId,
+      @Param("authorityId") Integer authorityId
+  );
 }

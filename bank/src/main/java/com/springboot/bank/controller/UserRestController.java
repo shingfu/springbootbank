@@ -97,4 +97,12 @@ public class UserRestController {
     return ResponseEntity.ok(count);
   }
 
+  @PostMapping("/userauthority")
+  public ResponseEntity<?> addUserAuthority(
+      @RequestParam("userId") Integer userId,
+      @RequestParam("authorityId") Integer authorityId) {
+    int count = userService.addUserAuthority(userId, authorityId);
+    return ResponseEntity.ok(count);
+  }
+
 }

@@ -31,6 +31,11 @@ public class UserService {
     return userMapper.modify(user);
   }
 
+  @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
+  public int addUserAuthority(Integer userId, Integer authorityId) {
+    return userMapper.addUserAuthority(userId, authorityId);
+  }
+
   public List<User> find() {
     return userMapper.find();
   }

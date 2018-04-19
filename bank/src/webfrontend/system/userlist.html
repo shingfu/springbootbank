@@ -43,7 +43,7 @@
       <tr class="text-c">
         <th width="80">用户名</th>
         <th width="100">Email</th>
-        <th width="100">启用|禁用</th>
+        <th width="100">是否启用</th>
         <th width="100">上次登录时间</th>
         <th width="100">操作</th>
       </tr>
@@ -52,7 +52,7 @@
       <tr class="text-c">
         <th width="80">用户名</th>
         <th width="100">Email</th>
-        <th width="100">启用|禁用</th>
+        <th width="100">是否启用</th>
         <th width="100">上次登录时间</th>
         <th width="100">操作</th>
       </tr>
@@ -74,9 +74,44 @@
 <script src="../static/h-ui.admin/js/H-ui.admin.js"></script>
 <script src="../static/layer/2.4/layer.js"></script>
 <script src="../static/layer/laypage.js"></script>
+<script src="../js/bank.js"></script>
 <script>
   $(window).on('load', () => {
+    $.ajax({
+      type: "get",
+      url: BANK_URL + "users",
+      dataType: "json",
+      headers: createAuthorizationTokenHeader(),
+      success: function (users) {
+        // console.log(users)
+        var text = ``
+        users.forEach((user) => {
+          var enabled = "是"
+          if (user.enabled == 0) {
+            enabled = "否"
+          }
 
+          text += `
+          <tr class="text-c">
+            <td width="80">${user.username}</td>
+            <td width="100">${user.email}</td>
+            <td width="100">${enabled}</td>
+            <td width="100">${user.loginDate}</td>
+            <td width="100">
+              <button type="button" onclick="editUser('修改系统用户',${user.id})" class="btn btn-secondary-outline radius">修改</button>
+             </td>
+          </tr>
+          `
+        })
+        $("tbody").append(text)
+
+        $(".table-hover").DataTable({
+          language: {
+            url: "../js/zh_CN.txt"
+          }
+        })
+      }
+    })
   })
 
   function editUser(title, id) {
