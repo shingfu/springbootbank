@@ -72,6 +72,13 @@
       <artifactId>findbugs</artifactId>
       <version>3.0.1</version>
     </dependency>
+
+    <!-- 将 Redis 作为 mybatis 的二级缓存 -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-redis</artifactId>
+    </dependency>
+
   </dependencies>
 
   <build>
