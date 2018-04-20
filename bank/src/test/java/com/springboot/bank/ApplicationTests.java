@@ -1,5 +1,6 @@
 package com.springboot.bank;
 
+import com.springboot.bank.service.UserService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,9 @@ import org.springframework.test.context.junit4.SpringRunner;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class ApplicationTests {
+
+  @Autowired
+  private UserService userService;
 
   @Autowired
   private PasswordEncoder passwordEncoder;
@@ -27,5 +31,11 @@ public class ApplicationTests {
      */
     System.out.println(passwordEncoder.encode("admin"));
   }
+
+  @Test
+  public void addUserAuthority() {
+    userService.addUserAuthority(6, new Integer[]{3, 2});
+  }
+
 
 }

@@ -1,5 +1,6 @@
 package com.springboot.bank.domain;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.springboot.bank.security.domain.Authority;
 
 import java.io.Serializable;
@@ -19,6 +20,8 @@ public class User implements Serializable {
   private String email;
   private Integer enabled;
   private Date lastPasswordResetDate;
+
+  @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
   private Date loginDate;
   private List<Authority> authorities;
 
