@@ -28,4 +28,12 @@
     where u.enabled=1 and u.username=#{username}
     and u.id=ua.user_id and ua.authority_id=a.id
   </select>
+
+  <!-- 批量新增 -->
+  <insert id="addUserAuthority">
+    insert into user_authority(user_id,authority_id) values
+    <foreach collection="authorityIds" item="authorityId" open="" close="" index="index" separator=",">
+    (#{userId},#{authorityId})
+    </foreach>
+  </insert>
 </mapper>
