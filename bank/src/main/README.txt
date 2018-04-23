@@ -264,3 +264,276 @@ ReadWriteLock getReadWriteLock()：可选实现。用于实现原子性的缓存
 
 tips: 修改密码后需等缓存失效超时后,再重新登录
 
+
+
+Cache注解详解
+
+@CacheConfig：主要用于配置该类中会用到的一些共用的缓存配置。在这里@CacheConfig(cacheNames = "users")：配置了该数据访问对象中返回的内容将存储于名为users的缓存对象中，也可以不使用该注解，直接通过@Cacheable自己配置缓存集的名字来定义。
+
+@Cacheable：配置了findByName函数的返回值将被加入缓存。同时在查询时，会先从缓存中获取，若不存在才再发起对数据库的访问。该注解主要有下面几个参数：
+
+value、cacheNames：两个等同的参数（cacheNames为Spring 4新增，作为value的别名），用于指定缓存存储的集合名。由于Spring 4中新增了@CacheConfig，因此在Spring 3中原本必须有的value属性，也成为非必需项了
+key：缓存对象存储在Map集合中的key值，非必需，缺省按照函数的所有参数组合作为key值，若自己配置需使用SpEL表达式，比如：@Cacheable(key = "#p0")：使用函数第一个参数作为缓存的key值，更多关于SpEL表达式的详细内容可参考官方文档
+condition：缓存对象的条件，非必需，也需使用SpEL表达式，只有满足表达式条件的内容才会被缓存，比如：@Cacheable(key = "#p0", condition = "#p0.length() < 3")，表示只有当第一个参数的长度小于3的时候才会被缓存，若做此配置上面的AAA用户就不会被缓存，读者可自行实验尝试。
+unless：另外一个缓存条件参数，非必需，需使用SpEL表达式。它不同于condition参数的地方在于它的判断时机，该条件是在函数被调用之后才做判断的，所以它可以通过对result进行判断。
+keyGenerator：用于指定key生成器，非必需。若需要指定一个自定义的key生成器，我们需要去实现org.springframework.cache.interceptor.KeyGenerator接口，并使用该参数来指定。需要注意的是：该参数与key是互斥的
+cacheManager：用于指定使用哪个缓存管理器，非必需。只有当有多个时才需要使用
+cacheResolver：用于指定使用那个缓存解析器，非必需。需通过org.springframework.cache.interceptor.CacheResolver接口来实现自己的缓存解析器，并用该参数指定。
+除了这里用到的两个注解之外，还有下面几个核心注解：
+
+@CachePut：配置于函数上，能够根据参数定义条件来进行缓存，它与@Cacheable不同的是，它每次都会真是调用函数，所以主要用于数据新增和修改操作上。它的参数与@Cacheable类似，具体功能可参考上面对@Cacheable参数的解析
+@CacheEvict：配置于函数上，通常用在删除方法上，用来从缓存中移除相应数据。除了同@Cacheable一样的参数之外，它还有下面两个参数：
+allEntries：非必需，默认为false。当为true时，会移除所有数据
+beforeInvocation：非必需，默认为false，会在调用方法之后移除数据。当为true时，会在调用方法之前移除数据。
+
+
+
+
+在Spring Boot中到底使用了什么缓存呢？
+
+在Spring Boot中通过@EnableCaching注解自动化配置合适的缓存管理器（CacheManager），Spring Boot根据下面的顺序去侦测缓存提供者：
+
+Generic
+JCache (JSR-107)
+EhCache 2.x
+Hazelcast
+Infinispan
+Redis
+Guava
+Simple
+除了按顺序侦测外，也可以通过配置属性spring.cache.type来强制指定。可以通过debug调试查看cacheManager对象的实例来判断当前使用了什么缓存。
+
+
+
+
+-------------------------------------------
+背景
+在分布式系统中，有多个web app，这些web app可能分别部署在不同的物理服务器上，并且有各自的日志输出。当生产问题来临时，很多时候都需要去各个日志文件中查找可能的异常，相当耗费人力。日志存储多以文本文件形式存在，当有需求需要对日志进行分析挖掘时，这个处理起来也是诸多不便，而且效率低下。
+
+为了方便对这些日志进行统一管理和分析，可以将日志统一输出到指定的数据库系统中，再由日志分析系统去管理。由于这里是mongodb的篇章，所以主观上以mongodb来做日志数据存储；客观上，一是因为它轻便、简单，与log4j整合方便，对系统的侵入性低。二是因为它与大型的关系型数据库相比有很多优势，比如查询快速、bson存储结构利于扩展、免费等。
+
+
+NoSQL & MongoDB
+
+
+
+NoSQL:Not Only SQL (不只是SQL)
+
+数据存储方案:
+应用程序存储和检索数据有以下三种方案
+文件系统直接存储
+关系型数据库
+NoSQL 数据库（是对非关系型数据库的统称）
+
+最重要的差别是 NoSQL 不使用 SQL 作为查询语言。
+数据存储可以不需要固定的表格模式（行和列），避免使用SQL的JOIN操作，有更高的性能及水平可扩展性的特征。
+NoSQL 在 ACID（原子性、一致性、隔离性、持久性） 的支持方面没有传统关系型数据完整。
+
+文档数据库   MongoDB / CouchDB
+键／值数据库 redis   / Cassandra
+列数据库     Hbase   / Cassandra
+图数据库     Neo4J
+
+
+
+MongoDB 基于文档存储模型，数据对象以BSON（二进制 JSON）格式被存储在集合的文档中，而不是关系数据库的行和列中。
+
+集合
+使用集合将数据编组，是一组用途相同的文档，类似表的概念，但集合不受模式的限制，在其中的文档格式可以不同。
+
+文档
+文档表示单个实体数据，类似一条记录（行）；与行的差别：行的数据是扁平的，每一列只有一个值，而文档中可以包含子文档，提供的数据模型与应用程序的会更加一致。
+
+
+一个文档 Demo:
+{
+  name:'X Fimaly'
+  address: ['NY','LA']
+  person: [{'name':'Jack'},{'name':'Rose'}]
+}
+
+
+
+安装 MongoDB
+官网:https://www.mongodb.com/
+
+下载社区版:mongodb-win32-x86_64-3.4.9-signed.msi
+
+设置环境变量:
+把安装目录 mongodb/bin 添加到系统 path 中
+...;D:\Program Files\MongoDB\Server\3.4\bin
+
+cmd:
+  mongo --help
+  mongo --version
+
+  tips:出错 缺少 api-ms-win-crt-runtime-xxx.dll 则安装 vc_redist.x64.exe
+
+创建一个存放数据的目录如：D:/Oracle/MongoDB/data
+从命令行执行 mongod --dbpath D:/Oracle/MongoDB/data 启动服务器 [不能关闭]
+从命令行执行 mongo 启动交互窗口（mongoDB shell）
+
+
+
+MongoDB 使用:
+数据库:
+启动 mongo shell  [相当于 mongo 客户端]
+
+显示数据库
+>show dbs
+
+切换数据库（若不存在则创建数据库）
+>use employee [相当于 mongo 的一个数据库]
+
+显示当前使用的数据库
+>db
+
+删除当前数据库
+  db.dropDatabase()
+
+
+
+Collection(集合):
+显示所有集合
+>show collections
+
+创建一个集合
+db.createCollection('emps') [相当于一张表 emps]
+
+删除一个集合
+  db.emps.drop()
+
+
+
+MongoDB CRUD:
+插入一个文档
+db.collection.insertOne()
+db.emps.insertOne({name:'SMITH',age:27})
+
+插入多个文档
+db.collection.insertMany()
+db.emps.insertMany([{name:'SCOTT',age:26},{name:'KING',age:24,phone:['155','186']}])
+
+查询（检索文档）
+db.emps.find()
+
+name 是 KING
+db.emps.find({name:'KING'})
+
+age 大于 25
+db.emps.find({age:{$gt:25}})
+
+age 小于 25 且 name 是 KING
+db.emps.find({age:{$lt:25},name:'KING'})
+
+电话号码为 186
+db.emps.find({phone:'186'})
+
+
+
+更新一个文档
+db.collection.updateOne()
+更新多个文档
+db.collection.updateMany()
+
+db.emps.updateOne(
+	{name:'SCOTT'},	// 更新的条件
+	{$set:{age:19}}	// 新的数据
+)
+
+// update 时新增字段
+db.emps.updateOne(
+	{name:'SMITH'},
+  {$set:{phoneabc:'186'}}
+)
+
+
+
+删除一个文档
+db.collection.deleteOne()
+删除多个文档
+db.collection.deleteMany()
+
+db.emps.deleteOne({name:'SCOTT'})
+db.emps.deleteMany({age:{$lt:30}})
+
+
+--------------------------------------------------------
+准备:
+1.start mysql [数据库服务器]
+2.start redis [redis服务器 - 二级缓存]
+  - 切换至 bin 目录,cmd 执行: redis-server.exe redis.windows.conf
+
+  start MongoDB [日志服务器]
+  - cmd 执行: mongod --dbpath D:/Oracle/MongoDB/data
+3.start idea  [云端/后端服务器]
+  - run Application
+4.start live-server [前端服务器]
+5.Chrome
+
+
+
+
+使用logback实现http请求日志导入mongodb
+
+spring boot自带logback作为其日志新系统，但是在实际工作中，常常需要对日志进行管理或分析，
+如果只是单纯的将日志导入文本文件，则在查询时操作过于繁琐，
+如果将其导入mysql等关系型数据库进行存储，又太影响系统性能，同时由于Mysql其结构化的信息存储结构，导致在存储时不够灵活。
+因此，在此考虑将springboot系统中产出的日志(logback) 存入mongodb中
+
+1.pom.xml 引入依赖
+  https://mvnrepository.com 搜索最新的 jar 包
+  <dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-mongodb</artifactId>
+    <version>1.5.8.RELEASE</version>
+  </dependency>
+
+  <!-- https://mvnrepository.com/artifact/ch.qos.logback/logback-core -->
+  <dependency>
+    <groupId>ch.qos.logback</groupId>
+    <artifactId>logback-core</artifactId>
+    <version>1.2.3</version>
+  </dependency>
+
+  <!-- https://mvnrepository.com/artifact/ch.qos.logback/logback-classic -->
+  <dependency>
+    <groupId>ch.qos.logback</groupId>
+    <artifactId>logback-classic</artifactId>
+    <version>1.2.3</version>
+  </dependency>
+
+  <!-- AOP 依赖 -->
+  <dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-aop</artifactId>
+    <version>1.5.7.RELEASE</version>
+  </dependency>
+
+2.添加实体类: logback.MyLog.java
+3.添加数据访问接口: LogRepository.java
+4.Appender 类: MongoDBAppender.java
+
+5.切面中使用mongodb logger:
+  logger取名为MONGODB
+  通过getBasicDBObject函数从HttpServletRequest和JoinPoint对象中获取请求信息，并组装成BasicDBObject
+  getHeadersInfo函数从HttpServletRequest中获取header信息
+  通过logger.info()，输出BasicDBObject对象的信息到mongodb
+
+6.resources/logback.xml - 更新 <appender name="MONGODB" />
+            application.yml 配置spring boot的文件配置标签
+
+            spring:
+              data:
+                mongodb:
+                  uri: mongodb://127.0.0.1:27017/logs
+
+7.controller
+
+8.start Application
+  Chrome: http://127.0.0.1:8080/mongo | greeting
+
+9.cmd - mongo 进入客户端
+  >use logs
+  >db.myLog.find()
+  >db.myLog.find({_class:"com.hospital.registration.logback.MyLog"})

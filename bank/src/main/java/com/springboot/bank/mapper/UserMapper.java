@@ -1,6 +1,7 @@
 package com.springboot.bank.mapper;
 
 import com.springboot.bank.domain.User;
+import com.springboot.bank.util.RedisCache;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
@@ -8,6 +9,7 @@ import java.util.List;
 /**
  * @author SONG
  */
+@CacheNamespace(implementation = RedisCache.class)
 public interface UserMapper {
 
   User findByUsername(@Param("username") String username);
@@ -24,9 +26,11 @@ public interface UserMapper {
   List<User> find();
 
   @Select("select id,username,email,enabled,last_password_reset_date lastPasswordResetDate,login_time loginDate from user where id=#{id}")
+    //@Options(flushCache = true)
   User findById(Integer id);
 
   @Insert("insert into user(username,password,email,enabled,last_password_reset_date,login_time) values(#{username},#{password},#{email},#{enabled},#{lastPasswordResetDate},#{loginDate})")
+  //@Options(flushCache = Options.FlushCachePolicy.TRUE, timeout = 20000)
   int add(User user);
 
   @Update("update user set email=#{email},enabled=#{enabled} where id=#{id}")
