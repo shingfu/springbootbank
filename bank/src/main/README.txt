@@ -486,8 +486,13 @@ spring boot自带logback作为其日志新系统，但是在实际工作中，�
   <dependency>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-data-mongodb</artifactId>
-    <version>1.5.8.RELEASE</version>
   </dependency>
+
+  <!-- AOP 依赖 -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-aop</artifactId>
+    </dependency>
 
   <!-- https://mvnrepository.com/artifact/ch.qos.logback/logback-core -->
   <dependency>
@@ -503,11 +508,11 @@ spring boot自带logback作为其日志新系统，但是在实际工作中，�
     <version>1.2.3</version>
   </dependency>
 
-  <!-- AOP 依赖 -->
+  <!-- https://mvnrepository.com/artifact/log4j/log4j -->
   <dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-aop</artifactId>
-    <version>1.5.7.RELEASE</version>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.2.17</version>
   </dependency>
 
 2.添加实体类: logback.MyLog.java

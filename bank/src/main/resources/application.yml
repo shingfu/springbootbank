@@ -19,6 +19,9 @@ spring:
         min-idle: 0
         max-active: 8
         max-wait: -1ms
+  data:
+    mongodb:
+      uri: mongodb://127.0.0.1:27017/logs
 
 mybatis:
   type-aliases-package: com.springboot.bank.domain
